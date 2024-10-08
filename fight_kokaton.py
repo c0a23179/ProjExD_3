@@ -10,7 +10,6 @@ WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     """
     オブジェクトが画面内or画面外を判定し，真理値タプルを返す関数
@@ -154,6 +153,7 @@ class Bomb:
 
 
 def main():
+    beams = []
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load("fig/pg_bg.jpg")
@@ -171,7 +171,10 @@ def main():
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 # スペースキー押下でBeamクラスのインスタンス生成
-                beam = Beam(bird)            
+                beams.append(Beam(bird))
+            #if event.type == pg.K_SPACE:
+            #   print("aaa")
+                
         screen.blit(bg_img, [0, 0])
         
         for bomb in bombs:
@@ -188,18 +191,23 @@ def main():
                     return
         
         for j, bomb in enumerate(bombs):
-            if beam is not None:
-                if bomb is not None:
-                    if beam.rct.colliderect(bomb.rct):  # ビームと爆弾衝突したら
-                        beam,bombs[j] = None, None
-                        score += 1
-                        bird.change_img(6, screen)
-                        pg.display.update()
+            for i, beam in enumerate(beams):
+                if beam.rct.colliderect(bomb.rct):  # ビームと爆弾衝突したら
+                    bombs[j] = None
+                    beams[i] = None
+                    score += 1
+                    bird.change_img(6, screen)
+                    pg.display.update()
+            beams = [beam for beam in beams if beam is not None]
         bombs = [bomb for bomb in bombs if bomb is not None]
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
-        if beam is not None:
-            beam.update(screen)
+        for i,beam in enumerate(beams):
+            #if beam is not None:
+            if check_bound(beam.rct) == (False,False):
+                del beams[i]
+            else:
+                beam.update(screen)
         for bomb in bombs:
            bomb.update(screen)
         score2.update(screen,score)
